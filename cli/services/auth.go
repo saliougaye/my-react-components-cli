@@ -1,5 +1,35 @@
 package services
 
-type AuthService struct{}
+import "errors"
 
-func (a AuthService) Login() {}
+type authService struct {
+	httpClient HTTPClient
+}
+
+func CreateAuthService() *authService {
+	return &authService{
+		httpClient: NewHTTPClient(
+			"https://api.github.com",
+		),
+	}
+}
+
+func (a authService) IsTokenValid(token string) error {
+
+	res, err := a.httpClient.request(
+		"GET",
+		"/user",
+		token,
+		nil,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode == 401 {
+		return errors.New("token not valid")
+	}
+
+	return nil
+}
