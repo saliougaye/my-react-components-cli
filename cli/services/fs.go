@@ -1,9 +1,33 @@
 package services
 
-type FsService struct{}
+import (
+	"os"
+)
 
-func (fs FsService) CreateFolder() {}
+type fsService struct{}
 
-func (fs FsService) CreateFile() {}
+func NewFsService() fsService {
+	return fsService{}
+}
 
-func (fs FsService) WriteToFile() {}
+func (fs fsService) CreateFolder(dirPath string) error {
+	return os.Mkdir(dirPath, os.ModePerm)
+}
+
+func (fs fsService) CreateEmptyFile(filePath string) (*os.File, error) {
+	f, err := os.Create(filePath)
+	return f, err
+}
+
+func (fs fsService) CreateFileWithContent(filePath, content string) error {
+	err := os.WriteFile(filePath, []byte(content), os.ModePerm)
+
+	return err
+}
+
+func (fs fsService) WriteToFile(filePath, content string) error {
+	err := os.WriteFile(filePath, []byte(content), os.ModePerm)
+
+	return err
+
+}

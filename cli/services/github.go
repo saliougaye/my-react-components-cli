@@ -11,12 +11,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-type gHService struct {
+type ghService struct {
 	client HTTPClient
 }
 
-func NewGHService() gHService {
-	return gHService{
+func NewGHService() ghService {
+	return ghService{
 		client: NewHTTPClient("https://github.com"),
 	}
 }
@@ -34,7 +34,7 @@ type ghIssueResponse struct {
 	Url string `json:"url"`
 }
 
-func (gh gHService) CreateIssue(repoUrl, componentName string) (*ghIssueResponse, error) {
+func (gh ghService) CreateIssue(repoUrl, componentName string) (*ghIssueResponse, error) {
 
 	urlParsed, err := url.ParseRequestURI(repoUrl)
 
@@ -103,12 +103,12 @@ func getOwnerAndRepo(inputUrl url.URL) (string, string) {
 	return owner, repo
 }
 
-func (gh gHService) CreatePR() {}
+func (gh ghService) CreatePR() {}
 
-func (gh gHService) AcceptPR() {}
+func (gh ghService) AcceptPR() {}
 
-func (g GitService) Merge() {}
+func (g ghService) Merge() {}
 
-func (gh gHService) Tag() {}
+func (gh ghService) Tag() {}
 
-func (gh gHService) Read() {}
+func (gh ghService) Read() {}

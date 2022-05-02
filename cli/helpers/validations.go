@@ -3,6 +3,7 @@ package helpers
 import (
 	"errors"
 	"net/url"
+	"os"
 	"regexp"
 )
 
@@ -34,6 +35,20 @@ func ValidateComponentName(componentName string) error {
 
 	if err != nil || !matched {
 		return errors.New("component name is not valid")
+	}
+
+	return nil
+}
+
+func ValidateRepoDir(inputPath string) error {
+
+	f, err := os.Stat(inputPath)
+	if os.IsNotExist(err) {
+		return errors.New("path not exist")
+	}
+
+	if !f.IsDir() {
+		return errors.New("path is not a directory")
 	}
 
 	return nil
