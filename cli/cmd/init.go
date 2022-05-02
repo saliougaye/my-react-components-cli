@@ -40,14 +40,13 @@ func runCommand(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Authenthicated Successfully\n")
 
-	// TODO save in config file
-
+	helpers.SaveInConfigFile("token", token)
 }
 
-func validateToken(clientId string) error {
+func validateToken(token string) error {
 
-	if len(clientId) == 0 {
-		return errors.New("please, provide the client id")
+	if len(token) == 0 {
+		return errors.New("please, provide the gh token")
 	}
 
 	return nil
