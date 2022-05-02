@@ -6,7 +6,10 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/saliougaye/my-react-components/helpers"
+	"github.com/saliougaye/my-react-components/services"
 	"github.com/spf13/cobra"
 )
 
@@ -15,9 +18,49 @@ var componentInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize a new react component",
 	Long:  `component init command create a folder structure for a new component to develop `,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("componentInit called")
-	},
+	Run:   runComponentInitCommand,
+}
+
+func runComponentInitCommand(cmd *cobra.Command, args []string) {
+
+	// ANCHOR input required
+	// - repo url
+	// - component name
+
+	repoUrl := helpers.InputString(helpers.InputContent{
+		Label:    "Github Repo URL",
+		Validate: helpers.ValidateRepoUrl,
+	})
+
+	componentName := helpers.InputString(helpers.InputContent{
+		Label:    "Component Name",
+		Validate: helpers.ValidateComponentName,
+	})
+
+	loading := helpers.Loading("Creating Issue for "+componentName+" ", "Issue Created -> ")
+
+	loading.Start()
+	time.Sleep(4 * time.Second)
+
+	ghService := services.NewGHService()
+	// TODO create the issue
+	ghIssue, err := ghService.CreateIssue(repoUrl, componentName)
+
+	if err != nil {
+
+		helpers.PrintError(err)
+
+		return
+	}
+
+	loading.Stop()
+
+	fmt.Printf("#%b ✅\n", ghIssue.Id)
+	fmt.Printf("Issue Url: %s\n", ghIssue.Url)
+
+	// TODO create the branch `feature/component name`
+
+	// TODO initialize folder structure
 }
 
 func init() {

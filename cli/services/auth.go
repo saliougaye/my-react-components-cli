@@ -19,7 +19,9 @@ func (a authService) IsTokenValid(token string) error {
 	res, err := a.httpClient.request(
 		"GET",
 		"/user",
-		token,
+		map[string]string{
+			"Authorization": "Bearer " + token,
+		},
 		nil,
 	)
 

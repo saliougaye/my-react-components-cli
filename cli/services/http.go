@@ -18,7 +18,7 @@ func NewHTTPClient(url string) HTTPClient {
 	}
 }
 
-func (c HTTPClient) request(method, path, token string, body interface{}) (*http.Response, error) {
+func (c HTTPClient) request(method, path string, headers map[string]string, body interface{}) (*http.Response, error) {
 
 	bs, err := json.Marshal(body)
 
@@ -32,7 +32,9 @@ func (c HTTPClient) request(method, path, token string, body interface{}) (*http
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Bearer "+token)
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
 
 	res, err := c.client.Do(req)
 

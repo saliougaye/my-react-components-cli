@@ -5,7 +5,6 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/saliougaye/my-react-components/helpers"
@@ -18,16 +17,16 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize cli",
 	Long:  `Initialize CLI with Github Authenthication`,
-	Run:   runCommand,
+	Run:   runInitCommand,
 }
 
 var as = services.CreateAuthService()
 
-func runCommand(cmd *cobra.Command, args []string) {
+func runInitCommand(cmd *cobra.Command, args []string) {
 
 	token := helpers.InputString(helpers.InputContent{
 		Label:    "GH Token:",
-		Validate: validateToken,
+		Validate: helpers.ValidateToken,
 	})
 
 	err := as.IsTokenValid(token)
@@ -41,16 +40,6 @@ func runCommand(cmd *cobra.Command, args []string) {
 	fmt.Printf("Authenthicated Successfully\n")
 
 	helpers.SaveInConfigFile("token", token)
-}
-
-func validateToken(token string) error {
-
-	if len(token) == 0 {
-		return errors.New("please, provide the gh token")
-	}
-
-	return nil
-
 }
 
 func init() {
