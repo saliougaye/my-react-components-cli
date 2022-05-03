@@ -36,17 +36,13 @@ func init() {
 func initConfig() {
 	home, err := homedir.Dir()
 
-	if err != nil {
-		helpers.PrintError(err)
-		os.Exit(1)
-	}
+	helpers.CheckError(err)
 
 	configFile := ".myreactcomponents-config-cli.json"
 	viper.SetConfigType("json")
 	viper.SetConfigFile(home + "/" + configFile)
 
-	if err := viper.ReadInConfig(); err != nil {
-		helpers.PrintError(err)
-		os.Exit(1)
-	}
+	err = viper.ReadInConfig()
+	helpers.CheckError(err)
+
 }

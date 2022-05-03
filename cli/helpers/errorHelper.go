@@ -1,9 +1,16 @@
 package helpers
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-func PrintError(err error) {
+func CheckError(err error) {
 
-	// TODO color with red
-	fmt.Printf("Prompt Error %v\n", err)
+	if err != nil {
+		// TODO color with red
+		fmt.Printf("❌\nerror %v\n", err)
+		os.Exit(1)
+	}
+
 }

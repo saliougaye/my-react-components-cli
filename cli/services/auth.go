@@ -29,6 +29,8 @@ func (a authService) IsTokenValid(token string) error {
 		return err
 	}
 
+	defer res.Body.Close()
+
 	if res.StatusCode == 401 {
 		return errors.New("token not valid")
 	}

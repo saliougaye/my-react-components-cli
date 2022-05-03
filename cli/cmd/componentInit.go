@@ -46,12 +46,7 @@ func runComponentInitCommand(cmd *cobra.Command, args []string) {
 	// TODO create the issue
 	ghIssue, err := ghService.CreateIssue(repoUrl, componentName)
 
-	if err != nil {
-
-		helpers.PrintError(err)
-
-		return
-	}
+	helpers.CheckError(err)
 
 	loading.Stop()
 

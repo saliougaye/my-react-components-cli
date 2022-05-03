@@ -1,8 +1,6 @@
 package helpers
 
 import (
-	"os"
-
 	"github.com/manifoldco/promptui"
 )
 
@@ -20,16 +18,15 @@ func InputString(ic InputContent) string {
 	}
 
 	prompt := promptui.Prompt{
-		Label:     ic.Label,
-		Templates: templates,
-		Validate:  ic.Validate,
+		Label:       ic.Label,
+		Templates:   templates,
+		Validate:    ic.Validate,
+		HideEntered: false,
 	}
 
 	result, err := prompt.Run()
 
-	if err != nil {
-		PrintError(err)
-		os.Exit(1)
-	}
+	CheckError(err)
+
 	return result
 }
