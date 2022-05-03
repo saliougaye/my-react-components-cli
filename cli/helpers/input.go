@@ -4,12 +4,22 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-type InputContent struct {
+type InputContentString struct {
 	Label    string
 	Validate func(string) error
 }
 
-func InputString(ic InputContent) string {
+type InputContentSelect struct {
+	Label string
+	Items []InputContentSelectItem
+}
+
+type InputContentSelectItem struct {
+	Name   string
+	Detail string
+}
+
+func InputString(ic InputContentString) string {
 
 	templates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
@@ -29,4 +39,27 @@ func InputString(ic InputContent) string {
 	CheckError(err)
 
 	return result
+}
+
+func InputSelect(ic InputContentSelect) int {
+
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}?",
+		Active:   "\U0001F336 {{ .Name | cyan }}",
+		Inactive: "  {{ .Name | cyan }} ",
+		Selected: "\U0001F336 {{ .Name | red | cyan }}",
+		Details:  `{{ .Detail }}`,
+	}
+
+	prompt := promptui.Select{
+		Label:     ic.Label,
+		Items:     ic.Items,
+		Templates: templates,
+	}
+
+	key, _, err := prompt.Run()
+
+	CheckError(err)
+
+	return key
 }

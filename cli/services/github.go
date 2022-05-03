@@ -7,31 +7,31 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
-
-	"github.com/spf13/viper"
 )
 
 type ghService struct {
 	client HTTPClient
+	token  string
 }
 
-func NewGHService() ghService {
+func NewGHService(token string) ghService {
 	return ghService{
-		client: NewHTTPClient("https://github.com"),
+		client: NewHTTPClient("https://api.github.com"),
+		token:  token,
 	}
 }
 
 var ghHeader = "application/vnd.github.v3+json"
 
 type ghIssue struct {
-	title  string
-	body   string
-	labels []string
+	Title  string   `json:"title"`
+	Body   string   `json:"body"`
+	Labels []string `json:"labels"`
 }
 
 type ghIssueResponse struct {
-	Id  int    `json:"id"`
-	Url string `json:"url"`
+	Id  int    `json:"number"`
+	Url string `json:"html_url"`
 }
 
 func (gh ghService) CreateIssue(repoUrl, componentName string) (*ghIssueResponse, error) {
@@ -45,23 +45,20 @@ func (gh ghService) CreateIssue(repoUrl, componentName string) (*ghIssueResponse
 	owner, repo := getOwnerAndRepo(*urlParsed)
 
 	issue := ghIssue{
-		title:  "[CLI] Develop New Component: " + componentName,
-		body:   "[CLI] Requested to develop new component " + componentName,
-		labels: []string{"enhancement"},
+		Title:  "[CLI] Develop New Component: " + componentName,
+		Body:   "[CLI] Requested to develop new component " + componentName,
+		Labels: []string{"enhancement"},
 	}
 
 	path := fmt.Sprintf("/repos/%s/%s/issues", owner, repo)
-
-	if !viper.IsSet("token") {
-		return nil, errors.New("first init the cli with the GH token.\ntry ./my-react-components init")
-	}
 
 	res, err := gh.client.request(
 		"POST",
 		path,
 		map[string]string{
-			"Authorization": "Bearer " + viper.GetString("token"),
+			"Authorization": "Bearer " + gh.token,
 			"accept":        ghHeader,
+			"Content-Type":  "application/json",
 		},
 		issue,
 	)

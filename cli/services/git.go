@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/saliougaye/my-react-components/helpers"
 )
 
 type gitService struct {
@@ -18,13 +19,28 @@ func (g gitService) Init(directory string) (*git.Repository, error) {
 	return git.PlainInit(directory, false)
 }
 
-func (g gitService) CreateBranch() {}
+func (g gitService) GetRemotes(directory string) []*git.Remote {
 
-func (g gitService) Add() {}
+	r, err := git.PlainOpen(directory)
 
-func (g gitService) Commit() {}
+	helpers.CheckError(err)
 
-func (g gitService) Push() {}
+	list, err := r.Remotes()
+
+	helpers.CheckError(err)
+
+	return list
+
+}
+
+func (g gitService) GetRepo(path string) *git.Repository {
+
+	r, err := git.PlainOpen(path)
+
+	helpers.CheckError(err)
+
+	return r
+}
 
 func (g gitService) Clone(token, repoUrl, directory string) (*git.Repository, error) {
 
@@ -41,5 +57,3 @@ func (g gitService) Clone(token, repoUrl, directory string) (*git.Repository, er
 	return r, err
 
 }
-
-func (g gitService) Checkout() {}

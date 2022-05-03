@@ -5,12 +5,12 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-	"time"
+	"errors"
 
 	"github.com/saliougaye/my-react-components/helpers"
 	"github.com/saliougaye/my-react-components/services"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // componentInitCmd represents the componentInit command
@@ -23,39 +23,25 @@ var componentInitCmd = &cobra.Command{
 
 func runComponentInitCommand(cmd *cobra.Command, args []string) {
 
-	// ANCHOR input required
-	// - repo url
-	// - component name
-
-	repoUrl := helpers.InputString(helpers.InputContent{
-		Label:    "Github Repo URL",
-		Validate: helpers.ValidateRepoUrl,
+	repoPath := helpers.InputString(helpers.InputContentString{
+		Label:    "Repository Path",
+		Validate: helpers.ValidateRepoDir,
 	})
 
-	componentName := helpers.InputString(helpers.InputContent{
+	componentName := helpers.InputString(helpers.InputContentString{
 		Label:    "Component Name",
 		Validate: helpers.ValidateComponentName,
 	})
 
-	loading := helpers.Loading("Creating Issue for "+componentName+" ", "Issue Created -> ")
+	if !viper.IsSet("token") {
+		helpers.CheckError(errors.New("initialize cli first"))
+	}
 
-	loading.Start()
-	time.Sleep(4 * time.Second)
+	token := viper.GetString("token")
 
-	ghService := services.NewGHService()
-	// TODO create the issue
-	ghIssue, err := ghService.CreateIssue(repoUrl, componentName)
+	cliService := services.NewCliService(token)
 
-	helpers.CheckError(err)
-
-	loading.Stop()
-
-	fmt.Printf("#%b ✅\n", ghIssue.Id)
-	fmt.Printf("Issue Url: %s\n", ghIssue.Url)
-
-	// TODO create the branch `feature/component name`
-
-	// TODO initialize folder structure
+	cliService.ComponentInit(componentName, repoPath)
 }
 
 func init() {

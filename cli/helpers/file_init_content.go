@@ -1,0 +1,54 @@
+package helpers
+
+import "encoding/json"
+
+type ConfigFile struct {
+	Name            string            `json:"name"`
+	Dependencies    map[string]string `json:"dependencies"`
+	DevDependencies map[string]string `json:"devDependencies"`
+}
+
+func CreateConfigFile(component string) string {
+
+	config := ConfigFile{
+		Name:            component,
+		Dependencies:    map[string]string{},
+		DevDependencies: map[string]string{},
+	}
+
+	bytes, err := json.MarshalIndent(config, "", "\t")
+
+	CheckError(err)
+
+	return string(bytes)
+}
+
+func GetComponentReadmeInitContent(component string) string {
+
+	return `# ` + component
+}
+
+func GetCliReadmeInitContent() string {
+	return `
+# My React Components
+My Re-usable components, created from my-react-components CLI
+`
+}
+
+func GetChangelogInitContent() string {
+
+	return `
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+`
+}
+
+func GetCliGitIgnoreContent() string {
+	return `
+node_modules
+test_env
+`
+}

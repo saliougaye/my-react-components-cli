@@ -14,13 +14,9 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize cli",
-	Long:  `Initialize CLI with Github Authenthication`,
+	Long:  `Initialize CLI with Github Authentication`,
 	Run:   runInitCommand,
 }
-
-var as = services.CreateAuthService()
-var gitService = services.NewGitService()
-var fsService = services.NewFsService()
 
 func runInitCommand(cmd *cobra.Command, args []string) {
 
@@ -33,17 +29,17 @@ func runInitCommand(cmd *cobra.Command, args []string) {
 }
 
 func initInput() (string, string, string) {
-	token := helpers.InputString(helpers.InputContent{
-		Label:    "GH Token:",
+	token := helpers.InputString(helpers.InputContentString{
+		Label:    "Github Access Token:",
 		Validate: helpers.ValidateToken,
 	})
 
-	repoUrl := helpers.InputString(helpers.InputContent{
-		Label:    "Repo Url:",
+	repoUrl := helpers.InputString(helpers.InputContentString{
+		Label:    "Github Repository Url:",
 		Validate: helpers.ValidateRepoUrl,
 	})
 
-	repoDir := helpers.InputString(helpers.InputContent{
+	repoDir := helpers.InputString(helpers.InputContentString{
 		Label:    "Where to clone? ",
 		Validate: helpers.ValidateRepoDir,
 	})

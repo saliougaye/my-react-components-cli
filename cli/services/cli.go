@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -19,6 +18,7 @@ type cliService struct {
 	auth  authService
 	git   gitService
 	fs    fsService
+	gh    ghService
 }
 
 func NewCliService(token string) cliService {
@@ -27,10 +27,13 @@ func NewCliService(token string) cliService {
 		auth:  *CreateAuthService(),
 		git:   NewGitService(),
 		fs:    NewFsService(),
+		gh:    NewGHService(token),
 	}
 }
 
 func (c cliService) Init(repoUrl, repoDir string) {
+
+	// TODO get username of token user and use it in commit description
 	c.initVerifyToken()
 
 	r := c.initInitRepo(repoDir)
@@ -52,6 +55,18 @@ func (c cliService) Init(repoUrl, repoDir string) {
 	c.initDeleteOtherBranches(r, workTree)
 
 	c.initGitPush(r)
+
+}
+
+func (c cliService) ComponentInit(component, localRepoPath string) {
+
+	remoteSelected := c.componentInitSelectRemote(localRepoPath)
+
+	c.componentInitCreateIssue(component, remoteSelected)
+
+	c.componentInitCreateFeatureBranch(component, localRepoPath, remoteSelected)
+
+	c.componentInitCreateFolderStructure(component, localRepoPath, remoteSelected)
 
 }
 
@@ -118,49 +133,19 @@ func (c cliService) createRepoStructure(repoDir string) {
 
 	time.Sleep(2 * time.Second)
 
-	folders := []string{"components"}
+	folders := []string{
+		filepath.Join(repoDir, "components"),
+	}
 
 	files := map[string]string{
-		"README.md": `
-# My React Components
-My Re-usable components, created from my-react-components CLI
-`,
-		".gitignore": `
-node_modules
-test_env
-`,
-		filepath.Join("components", "README.md"): `
-# Components Folder
-`,
+		filepath.Join(repoDir, "README.md"):               helpers.GetCliReadmeInitContent(),
+		filepath.Join(repoDir, ".gitignore"):              helpers.GetCliGitIgnoreContent(),
+		filepath.Join(repoDir, "components", "README.md"): helpers.GetComponentReadmeInitContent("Components Folder"),
 	}
 
-	for i := range folders {
-		err := c.fs.CreateFolder(
-			filepath.Join(repoDir, folders[i]),
-		)
+	c.fs.CreateFolders(folders)
 
-		if err != nil {
-			errMsg := fmt.Sprintf("failed to create %s directory: %s", folders[i], err.Error())
-
-			helpers.CheckError(errors.New(errMsg))
-		}
-
-	}
-
-	for k, v := range files {
-
-		err := c.fs.CreateFileWithContent(
-			filepath.Join(repoDir, k),
-			v,
-		)
-
-		if err != nil {
-			errMsg := fmt.Sprintf("failed to create %s: %s", k, err.Error())
-
-			helpers.CheckError(errors.New(errMsg))
-		}
-
-	}
+	c.fs.CreateFilesWithContent(helpers.GetFileInputFromMap(files))
 
 	loading.Stop()
 }
@@ -261,6 +246,94 @@ func (c cliService) initGitPush(r *git.Repository) {
 	})
 
 	helpers.CheckError(err)
+
+	loading.Stop()
+}
+
+func (c cliService) componentInitSelectRemote(localRepoPath string) *git.Remote {
+
+	remotes := c.git.GetRemotes(localRepoPath)
+
+	items := []helpers.InputContentSelectItem{}
+
+	for _, v := range remotes {
+		items = append(items, helpers.InputContentSelectItem{
+			Name:   v.Config().Name,
+			Detail: v.Config().URLs[0],
+		})
+	}
+
+	remoteKeySelected := helpers.InputSelect(helpers.InputContentSelect{
+		Label: "Choose the remote: ",
+		Items: items,
+	})
+
+	return remotes[remoteKeySelected]
+}
+
+func (c cliService) componentInitCreateIssue(component string, remoteSelected *git.Remote) {
+	loading := helpers.Loading("Creating Issue for "+component+" ", "Issue Created: ")
+
+	loading.Start()
+	time.Sleep(2 * time.Second)
+
+	ghIssue, err := c.gh.CreateIssue(remoteSelected.Config().URLs[0], component)
+
+	helpers.CheckError(err)
+
+	loading.Stop()
+
+	fmt.Printf("#%d -> %s %s\n", ghIssue.Id, ghIssue.Url, " ✅")
+
+}
+
+func (c cliService) componentInitCreateFeatureBranch(component, localRepoPath string, remoteSelected *git.Remote) {
+	loading := helpers.Loading("Creating feature/"+component+" branch", "Creating feature/"+component+" branch ✅")
+
+	loading.Start()
+	time.Sleep(2 * time.Second)
+
+	featureBranchName := fmt.Sprintf("feature/%s", component)
+	r := c.git.GetRepo(localRepoPath)
+
+	workTree, err := r.Worktree()
+
+	helpers.CheckError(err)
+
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(featureBranchName),
+		Create: true,
+	})
+
+	helpers.CheckError(err)
+
+	loading.Stop()
+
+}
+
+func (c cliService) componentInitCreateFolderStructure(component, localRepoPath string, remoteSelected *git.Remote) {
+	loading := helpers.Loading("Creating "+component+" folder structure", "Creating "+component+" folder structure ✅")
+
+	loading.Start()
+	time.Sleep(2 * time.Second)
+
+	folders := []string{
+		filepath.Join(localRepoPath, "components", component),
+		filepath.Join(localRepoPath, "components", component, "src"),
+		filepath.Join(localRepoPath, "components", component, "test_env"),
+	}
+
+	files := map[string]string{
+		filepath.Join(localRepoPath, "components", component, "CHANGELOG.md"): helpers.GetChangelogInitContent(),
+		filepath.Join(localRepoPath, "components", component, "README.md"):    helpers.GetComponentReadmeInitContent(component),
+		filepath.Join(localRepoPath, "components", component, "config.json"):  helpers.CreateConfigFile(component),
+	}
+
+	c.fs.CreateFolders(folders)
+
+	c.fs.CreateFilesWithContent(
+		helpers.GetFileInputFromMap(files),
+	)
 
 	loading.Stop()
 }

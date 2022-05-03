@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -26,7 +27,9 @@ func (c HTTPClient) request(method, path string, headers map[string]string, body
 		return nil, err
 	}
 
-	req, err := http.NewRequest(method, c.url+path, bytes.NewReader(bs))
+	req, err := http.NewRequest(method, c.url+path, bytes.NewBuffer(bs))
+
+	fmt.Println()
 
 	if err != nil {
 		return nil, err
