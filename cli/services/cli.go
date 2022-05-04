@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/saliougaye/my-react-components/cli_types"
 	"github.com/saliougaye/my-react-components/helpers"
 )
 
@@ -67,6 +69,50 @@ func (c cliService) ComponentInit(component, localRepoPath string) {
 	c.componentInitCreateFeatureBranch(component, localRepoPath, remoteSelected)
 
 	c.componentInitCreateFolderStructure(component, localRepoPath, remoteSelected)
+
+}
+
+func (c cliService) ListComponents(localRepoPath string) []cli_types.ConfigFile {
+
+	remoteSelected := c.componentInitSelectRemote(localRepoPath)
+
+	loading := helpers.Loading("Fetching components", "Components fetched ✅\n")
+
+	loading.Start()
+
+	time.Sleep(2 * time.Second)
+
+	repoUrl := remoteSelected.Config().URLs[0]
+
+	file_tree := c.gh.GetRepoFileList(repoUrl)
+
+	configs_file_in_components_folder := []cli_types.GhTree{}
+
+	for _, v := range file_tree {
+
+		if strings.HasPrefix(v.Path, "components/") && strings.HasSuffix(v.Path, "config.json") {
+			configs_file_in_components_folder = append(configs_file_in_components_folder, v)
+		}
+	}
+
+	components_configs := []cli_types.ConfigFile{}
+
+	for _, v := range configs_file_in_components_folder {
+		file := c.gh.GetFile(repoUrl, v)
+
+		contentJson := helpers.ConvertBase64ToString(file.Content)
+
+		component_config, err := cli_types.GetConfigFileFromJson(contentJson)
+
+		helpers.CheckError(err)
+
+		components_configs = append(components_configs, component_config)
+
+	}
+
+	loading.Stop()
+
+	return components_configs
 
 }
 
@@ -326,7 +372,7 @@ func (c cliService) componentInitCreateFolderStructure(component, localRepoPath 
 	files := map[string]string{
 		filepath.Join(localRepoPath, "components", component, "CHANGELOG.md"): helpers.GetChangelogInitContent(),
 		filepath.Join(localRepoPath, "components", component, "README.md"):    helpers.GetComponentReadmeInitContent(component),
-		filepath.Join(localRepoPath, "components", component, "config.json"):  helpers.CreateConfigFile(component),
+		filepath.Join(localRepoPath, "components", component, "config.json"):  helpers.CreateInitConfigFile(component),
 	}
 
 	c.fs.CreateFolders(folders)
@@ -334,6 +380,10 @@ func (c cliService) componentInitCreateFolderStructure(component, localRepoPath 
 	c.fs.CreateFilesWithContent(
 		helpers.GetFileInputFromMap(files),
 	)
+
+	// TODO create ts files
+
+	// TODO run npx create-react-app to test_env folder
 
 	loading.Stop()
 }

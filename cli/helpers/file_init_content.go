@@ -1,20 +1,14 @@
 package helpers
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-type ConfigFile struct {
-	Name            string            `json:"name"`
-	Dependencies    map[string]string `json:"dependencies"`
-	DevDependencies map[string]string `json:"devDependencies"`
-}
+	"github.com/saliougaye/my-react-components/cli_types"
+)
 
-func CreateConfigFile(component string) string {
+func CreateInitConfigFile(component string) string {
 
-	config := ConfigFile{
-		Name:            component,
-		Dependencies:    map[string]string{},
-		DevDependencies: map[string]string{},
-	}
+	config := cli_types.GetInitConfigFile(component)
 
 	bytes, err := json.MarshalIndent(config, "", "\t")
 
